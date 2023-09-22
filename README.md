@@ -4,19 +4,19 @@ Interpreter for the esoteric language "Brainfuck" written in javascript, with a 
 
 ## What is Brainfuck?
 
-Brainfuck is an esoteric language developed by Urban Müller in 1993, with the intention of creating as minimally featured, but fully turing complete, language as possible.
-
-Brainfuck gives the user access to 8 commands, which are used to affect values in the registry : 
-">" - Move the data pointer to the right by 1 unit
-"<" - Move the data pointer to the left by 1 unit
-"+" - Increment the registry value at the data pointer by 1
-"-" - Decrement the registry value at the data pointer by 1
-"." - Output the byte at the data pointer
-"," - Accept one byte for input from the user
-"[" and "]" - opening and closing a loop, which terminates when the "]" character is reached at a registry value of 0
-
-With this limited assortment of commands, a dedicated developer could theoretically create any arbitrary program.
-
+Brainfuck is an esoteric language developed by Urban Müller in 1993, with the intention of creating as minimally featured, but fully turing complete, language as possible.<br>
+<br>
+Brainfuck gives the user access to 8 commands, which are used to affect values in the registry : <br>
+">" - Move the data pointer to the right by 1 unit<br>
+"<" - Move the data pointer to the left by 1 unit<br>
+"+" - Increment the registry value at the data pointer by 1<br>
+"-" - Decrement the registry value at the data pointer by 1<br>
+"." - Output the byte at the data pointer<br>
+"," - Accept one byte for input from the user<br>
+"[" and "]" - opening and closing a loop, which terminates when the "]" character is reached at a registry value of 0<br>
+<br>
+With this limited assortment of commands, a dedicated developer could theoretically create any arbitrary program.<br>
+<br>
 ## Why is this interpreter different?
 
 The majority of Brainfuck interpreters execute code whenever some "run" button is pressed. This is effective for development, but doesn't allow you to see the real-time effect of the code you create.
@@ -31,4 +31,4 @@ as the program the user makes becomes larger and larger.
 
 There is unfortunately no solution to this problem, as to detect an infinite loop by the user would be to solve the _halting problem_.
 
-# Have fun with this interpreter!
+# Have fun with my project!
