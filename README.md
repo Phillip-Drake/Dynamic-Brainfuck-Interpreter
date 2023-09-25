@@ -31,4 +31,9 @@ as the program the user makes becomes larger and larger.
 
 There is unfortunately no solution to this problem, as to detect an infinite loop by the user would be to solve the _halting problem_.
 
+### _TODO_
+1. Implement Dynamic programming to reduce execution time. Set code execution breakpoints to be at every single operation outside of loops. Create breakpoints before loops, and if the user edits the code inside the loop execute the whole loop
+2. Polish interface, add configurable delay via. slider-bar
+3. Implement interpretation optimization, execute whole blocks of the same character at once instead of individually (EX: ++++ = regPos + 4 instead of ++++ = redPos++, regPos++, regPos++, regPos++)
+
 # Have fun with my project!
