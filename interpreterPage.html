@@ -8,26 +8,26 @@
     </head>
     <body>
         <div class = "regDisplayParent">
-            <div class = "regDisplayChild"></div>
-            <div class = "regDisplayChild"></div>
-            <div class = "regDisplayChild"></div>
-            <div class = "regDisplayChild"></div>
-            <div class = "regDisplayChild"></div>
-            <div class = "regDisplayChild"></div>
-            <div class = "regDisplayChild"></div>
-            <div class = "regDisplayChild"></div>
-            <div class = "regDisplayChild"></div>
-            <div class = "regDisplayChild"></div>
-            <div class = "regDisplayChild"></div>
-            <div class = "regDisplayChild"></div>
-            <div class = "regDisplayChild"></div>
-            <div class = "regDisplayChild"></div>
-            <div class = "regDisplayChild"></div>
-            <div class = "regDisplayChild"></div>
-            <div class = "regDisplayChild"></div>
-            <div class = "regDisplayChild"></div>
-            <div class = "regDisplayChild"></div>
-            <div class = "regDisplayChild"></div>
+            <var class = "regDisplayChild"></var>
+            <var class = "regDisplayChild"></var>
+            <var class = "regDisplayChild"></var>
+            <var class = "regDisplayChild"></var>
+            <var class = "regDisplayChild"></var>
+            <var class = "regDisplayChild"></var>
+            <var class = "regDisplayChild"></var>
+            <var class = "regDisplayChild"></var>
+            <var class = "regDisplayChild"></var>
+            <var class = "regDisplayChild"></var>
+            <var class = "regDisplayChild"></var>
+            <var class = "regDisplayChild"></var>
+            <var class = "regDisplayChild"></var>
+            <var class = "regDisplayChild"></var>
+            <var class = "regDisplayChild"></var>
+            <var class = "regDisplayChild"></var>
+            <var class = "regDisplayChild"></var>
+            <var class = "regDisplayChild"></var>
+            <var class = "regDisplayChild"></var>
+            <var class = "regDisplayChild"></var>
         </div>
         <!--<label class = toggleSwitch>
             <input type = "checkbox">
@@ -37,17 +37,22 @@
             Run
         </div>
         <div class = "flexContainer">
-            <label class = "fileInputWrapper">  
+            <div class = "fileInputWrapper">  
                 <div class = "fileInputText">
                     Upload code
                 </div>
                 <input type = "file" id = "fileInput" class = "fileInput" accept = ".txt" required change = "changeFunc()"/> 
-            </label>
+            </div>
             <div class = "button" onclick = "downloadCode()">
                 Download code
             </div>
         </div>
-        <textarea class = "codeDisplay" oninput="onUpdate()"></textarea>
+        <textarea class = "codeDisplay" oninput="onUpdate()">
+Sample Hello World Program : 
+>++++++++[<+++++++++>-]<.>++++[<+++++++>-]<+.+++++++..+++.>>++++++[<+++++++>-]<+
++.------------.>++++++[<+++++++++>-]<+.<.+++.------.--------.>>>++++[<++++++++>-
+]<+.
+        </textarea>
     </body>
 </html>
 
@@ -113,7 +118,7 @@
         }
         return code;
     }
-    function resolveAfter2Seconds(x) {
+    function resolveAfterX(x) {
         return new Promise((resolve) => {
             setTimeout(() => {
                 resolve(x); 
@@ -131,8 +136,9 @@
         let thisAge = 0;
         //sets global age to 0 to show that the most recent thread has an age of 0
         age = 0;
-        resetRegistry();
-        for(let i = 0; i < code.length; i++)
+        //assures that the previous thread is done executing
+        await resolveAfterX(10);
+        for(let i = charFrom; i < code.length; i++)
         {
             //checks for thread deprecation at start of character read, if the thread is deprecated then it exits
             thisAge++;
@@ -173,24 +179,26 @@
             totalOps++;
             if(totalOps > 100000)
                 break;
-            await resolveAfter2Seconds(10);
+            await resolveAfterX(10);
         }
         if(outputString != "")
         {
             alert(outputString);
         }
-        
-    }   
+    }
+
     function onUpdate()
     {
         let tempCode = trimCode(document.querySelector(".codeDisplay").value);
         console.log(code);
         console.log(tempCode.slice(0, -1));
+        //checks if the previously used code, and the code that is about to be executed only differs in the last character
+        //if they only differ from the last character, only execute the newest character
         if(code === tempCode.slice(0, -1))
         {
-            console.log("called");
             executeCode(tempCode.length - 1);
         }
+        //if they differ by >1 character, re-execute the entire program
         else
         {
             resetRegistry();
@@ -199,7 +207,6 @@
     }
     function resetRegistry()
     {
-        console.log("called2");
         index = 0;
         lastIndex = 0;
         registry = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
