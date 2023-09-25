@@ -7,7 +7,7 @@
         <title>Phillip Drake</title>
     </head>
     <body>
-        <div class = "regDisplayParent">
+        <div class = "regDisplayParent preventSelect">
             <var class = "regDisplayChild"></var>
             <var class = "regDisplayChild"></var>
             <var class = "regDisplayChild"></var>
@@ -29,30 +29,30 @@
             <var class = "regDisplayChild"></var>
             <var class = "regDisplayChild"></var>
         </div>
-        <!--<label class = toggleSwitch>
-            <input type = "checkbox">
+        <label class = "center text">
+            Dynamic Mode
+        </label>
+        <label class = "toggleSwitch center preventSelect">
+            <input type = "checkbox" id = "dynamic">
             <span class = "slider"></span>
-        </label>-->
-        <div class = "button" onclick = "executeCode(0)">
-            Run
+        </label>
+        <label class = "center text">
+            Delay
+        </label>
+        <div class="slideContainer">
+            <input type="range" min="0" max="100" value="50" class = "delaySlider" id="delayMs">
         </div>
-        <div class = "flexContainer">
-            <div class = "fileInputWrapper">  
-                <div class = "fileInputText">
-                    Upload code
-                </div>
-                <input type = "file" id = "fileInput" class = "fileInput" accept = ".txt" required change = "changeFunc()"/> 
+        <div class = "codeDisplayWrapper">
+            <div class = "button preventSelect" onclick = "executeCode(0)">
+                <div class = "playIcon"></div>
             </div>
-            <div class = "button" onclick = "downloadCode()">
-                Download code
-            </div>
-        </div>
-        <textarea class = "codeDisplay" oninput="onUpdate()">
-Sample Hello World Program : 
+            <textarea class = "codeDisplay" oninput="onUpdate()">
+Sample Hello World : 
 >++++++++[<+++++++++>-]<.>++++[<+++++++>-]<+.+++++++..+++.>>++++++[<+++++++>-]<+
 +.------------.>++++++[<+++++++++>-]<+.<.+++.------.--------.>>>++++[<++++++++>-
 ]<+.
-        </textarea>
+            </textarea>
+        </div>
     </body>
 </html>
 
@@ -69,6 +69,10 @@ Sample Hello World Program :
     var lastIndex = 0;
     //represents age of most recently executing code thread
     var age = 0;
+    var dynamic = false;
+    var executing = false;
+    //represents if the code is currently awaiting the function to be finished before adding queued code
+    var queuedActions = 0;
     //is only true when code is done executing, prevents code from being executed multiple times with async function
     var doneExecuting = true;
     const registryNodes = document.querySelector(".regDisplayParent").children
@@ -76,14 +80,7 @@ Sample Hello World Program :
     pointer.src = "/images/pointer.png"
     pointer.alt = "pointer"
     pointer.classList.add("pointer")
-    //reads text file
-    document.getElementById("fileInput").addEventListener("change", function() {
-        var fr = new FileReader();
-        fr.onload=function(){
-            document.querySelector(".codeDisplay").value = fr.result;
-        }
-        fr.readAsText(this.files[0]);
-    });
+    
     //trims the code of any value which is not a brainf*ck operation
     function trimCode(unTrimmed){
         let code = "";
@@ -122,7 +119,7 @@ Sample Hello World Program :
         return new Promise((resolve) => {
             setTimeout(() => {
                 resolve(x); 
-            }, 1);
+            }, x);
         });
     }
     //executes code
@@ -131,19 +128,23 @@ Sample Hello World Program :
         //only executes if done
         //resets registry, reads code from textArea
         code = trimCode(document.querySelector(".codeDisplay").value);
-        let totalOps = 0;
         //local age, used to determine whether the current thread has been deprecated
         let thisAge = 0;
         //sets global age to 0 to show that the most recent thread has an age of 0
         age = 0;
+        if(charFrom == 0)
+        {
+            resetRegistry();
+        }
         //assures that the previous thread is done executing
-        await resolveAfterX(10);
+        await resolveAfterX(document.querySelector("#delayMs").value);
         for(let i = charFrom; i < code.length; i++)
         {
             //checks for thread deprecation at start of character read, if the thread is deprecated then it exits
             thisAge++;
             if(thisAge > age+1)
                 return 0;
+            executing = true;
             age++;
             //performs necessary operations for each brainf*ck operation
             switch(code[i])
@@ -176,34 +177,60 @@ Sample Hello World Program :
             }
             updateRegistry();
             placePointer();
-            totalOps++;
-            if(totalOps > 100000)
-                break;
-            await resolveAfterX(10);
+            await resolveAfterX(document.querySelector("#delayMs").value);
         }
         if(outputString != "")
         {
             alert(outputString);
         }
+        executing = false;
     }
 
-    function onUpdate()
+    async function onUpdate()
     {
-        let tempCode = trimCode(document.querySelector(".codeDisplay").value);
-        console.log(code);
-        console.log(tempCode.slice(0, -1));
-        //checks if the previously used code, and the code that is about to be executed only differs in the last character
-        //if they only differ from the last character, only execute the newest character
-        if(code === tempCode.slice(0, -1))
+        //leaves the function if dynamic mode is off
+        if(!document.querySelector("#dynamic").checked)
         {
-            executeCode(tempCode.length - 1);
+            return 0;
         }
-        //if they differ by >1 character, re-execute the entire program
-        else
+        //tempcode is the code currently in the codeDisplay at function call
+        let tempCode = trimCode(document.querySelector(".codeDisplay").value);
+        //if the code differs by more than the last characters in queue, resetRegistry and execute from base
+        if(code != tempCode.slice(0, 0-queuedActions - 1))
         {
+            queuedActions = 0;
             resetRegistry();
             executeCode(0);
+            return 0;
         }
+        //if the code is not currently executing, directly execute the code from the last character
+        if(!executing)
+        {
+            executeCode(tempCode.length - 1);
+            return 0;
+        }
+        //if there are already actions queued, add one to the queue and return
+        if(queuedActions != 0)
+        {
+            queuedActions++;
+            return 0;
+        }
+        //this can only be accessed if the queue is empty, the code is running, and the code only differs by the last character
+        //adds one to the queue, waits until the code is done executing, and then execute from the first queued character
+        queuedActions++;
+        //this function WILL last forever if there is an infinite loop, 
+        while(executing || queuedActions == 0)
+        {
+            await resolveAfterX(document.querySelector("#delayMs").value);
+        }
+        //this executeCode function only needs to come from the last character because of the asynchronous nature, 
+        //so the last character is actually the character at the start of the queue
+        if(queuedActions != 0)
+        {
+            exeuteCode(tempCode.length - 1);
+        }
+        executeCode(tempCode.length - 1);
+        queuedActions = 0;
     }
     function resetRegistry()
     {
@@ -271,21 +298,23 @@ Sample Hello World Program :
     function openLoop(i)
     {
         let numOpenBrackets = 0;
-        if(registry[index] == 0)
+        if(registry[index] != 0)
         {
-            for(let j = i + 1; j < code.length; j++)
+            return i;
+        }
+        for(let j = i + 1; j < code.length; j++)
+        {
+            if(code[j] == '[')
             {
-                if(code[j] == '[')
+                numOpenBrackets++;
+            }
+            if(code[j] == ']')
+            {
+                if(numOpenBrackets == 0)
                 {
-                    numOpenBrackets++;
+                    return j;
                 }
-                if(code[j] == ']')
-                {
-                    if(numOpenBrackets == 0)
-                        return j;
-                    else
-                        numOpenBrackets--;
-                }
+                numOpenBrackets--;
             }
         }
         return i;
@@ -303,18 +332,15 @@ Sample Hello World Program :
             if(code[j] == '[')
             {
                 if(numClosedBrackets == 0)
+                {
                     return j-1;
-                else
-                    numClosedBrackets--;
+                }
+                numClosedBrackets--;
             }
         }
         return i;
     }
-    //sleep function, function MUST be async in order to use this
-    function sleep(ms) 
-    {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
+    //file download support, can be implemented by adding an element with onclick=downloadCode()
     function downloadCode(){
         const link = document.createElement("a");
         const content = document.querySelector(".codeDisplay").value;
@@ -324,7 +350,14 @@ Sample Hello World Program :
         link.click();
         URL.revokeObjectURL(link.href);
     }
-
+    //file read support, can be implemented by adding element with id "fileInput"
+    document.getElementById("fileInput").addEventListener("change", function() {
+            var fr = new FileReader();
+            fr.onload=function(){
+                document.querySelector(".codeDisplay").value = fr.result;
+            }
+            fr.readAsText(this.files[0]);
+        });
 
     
 </script>
