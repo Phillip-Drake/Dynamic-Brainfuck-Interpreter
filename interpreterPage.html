@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+	<head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="interpreterPageStyle.css">
+        <title>Phillip Drake</title>
+    </head>
+    <body>
+        <div class = "regDisplayParent">
+            <div class = "regDisplayChild"></div>
+            <div class = "regDisplayChild"></div>
+            <div class = "regDisplayChild"></div>
+            <div class = "regDisplayChild"></div>
+            <div class = "regDisplayChild"></div>
+            <div class = "regDisplayChild"></div>
+            <div class = "regDisplayChild"></div>
+            <div class = "regDisplayChild"></div>
+            <div class = "regDisplayChild"></div>
+            <div class = "regDisplayChild"></div>
+            <div class = "regDisplayChild"></div>
+            <div class = "regDisplayChild"></div>
+            <div class = "regDisplayChild"></div>
+            <div class = "regDisplayChild"></div>
+            <div class = "regDisplayChild"></div>
+            <div class = "regDisplayChild"></div>
+            <div class = "regDisplayChild"></div>
+            <div class = "regDisplayChild"></div>
+            <div class = "regDisplayChild"></div>
+            <div class = "regDisplayChild"></div>
+        </div>
+        <!--<label class = toggleSwitch>
+            <input type = "checkbox">
+            <span class = "slider"></span>
+        </label>-->
+        <div class = "button" onclick = "executeCode(0)">
+            Run
+        </div>
+        <div class = "flexContainer">
+            <label class = "fileInputWrapper">  
+                <div class = "fileInputText">
+                    Upload code
+                </div>
+                <input type = "file" id = "fileInput" class = "fileInput" accept = ".txt" required change = "changeFunc()"/> 
+            </label>
+            <div class = "button" onclick = "downloadCode()">
+                Download code
+            </div>
+        </div>
+        <textarea class = "codeDisplay" oninput="onUpdate()"></textarea>
+    </body>
+</html>
+
+
+
+<script>
+    //code variable saves full codeText without formatting
+    var code = "";
+    //registry values
+    var registry = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    var outputString = "";
+    //index which is being executed
+    var index = 0;
+    var lastIndex = 0;
+    //represents age of most recently executing code thread
+    var age = 0;
+    //is only true when code is done executing, prevents code from being executed multiple times with async function
+    var doneExecuting = true;
+    const registryNodes = document.querySelector(".regDisplayParent").children
+    const pointer = document.createElement("img");
+    pointer.src = "/images/pointer.png"
+    pointer.alt = "pointer"
+    pointer.classList.add("pointer")
+    //reads text file
+    document.getElementById("fileInput").addEventListener("change", function() {
+        var fr = new FileReader();
+        fr.onload=function(){
+            document.querySelector(".codeDisplay").value = fr.result;
+        }
+        fr.readAsText(this.files[0]);
+    });
+    //trims the code of any value which is not a brainf*ck operation
+    function trimCode(unTrimmed){
+        let code = "";
+        for(let i = 0; i < unTrimmed.length; i++){
+            switch(unTrimmed.charAt(i)){
+                case '>':
+                    code += unTrimmed.charAt(i);
+                    break;
+                case '<':
+                    code += unTrimmed.charAt(i);
+                    break;
+                case '+':
+                    code += unTrimmed.charAt(i);
+                    break;
+                case '-':
+                    code += unTrimmed.charAt(i);
+                    break;
+                case ',':
+                    code += unTrimmed.charAt(i);
+                    break;
+                case '.':
+                    code += unTrimmed.charAt(i);
+                    break;
+                case '[':
+                    code += unTrimmed.charAt(i);
+                    break;
+                case ']':
+                    code += unTrimmed.charAt(i);
+                    break;
+                default:
+            }
+        }
+        return code;
+    }
+    function resolveAfter2Seconds(x) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                resolve(x); 
+            }, 1);
+        });
+    }
+    //executes code
+    async function executeCode(charFrom){
+        
+        //only executes if done
+        //resets registry, reads code from textArea
+        code = trimCode(document.querySelector(".codeDisplay").value);
+        let totalOps = 0;
+        //local age, used to determine whether the current thread has been deprecated
+        let thisAge = 0;
+        //sets global age to 0 to show that the most recent thread has an age of 0
+        age = 0;
+        resetRegistry();
+        for(let i = 0; i < code.length; i++)
+        {
+            //checks for thread deprecation at start of character read, if the thread is deprecated then it exits
+            thisAge++;
+            if(thisAge > age+1)
+                return 0;
+            age++;
+            //performs necessary operations for each brainf*ck operation
+            switch(code[i])
+            {
+                case '<':
+                    shiftLeft();
+                    break;
+                case '>':
+                    shiftRight();
+                    break;
+                case '+':
+                    increment();
+                    break;
+                case '-':
+                    decrement();
+                    break;
+                case ',':
+                    input();
+                    break;
+                case '.':
+                    output();
+                    break;
+                case '[':
+                    i = openLoop(i);    
+                    break;
+                case ']':
+                    i = closeLoop(i);
+                    break;
+                default:
+            }
+            updateRegistry();
+            placePointer();
+            totalOps++;
+            if(totalOps > 100000)
+                break;
+            await resolveAfter2Seconds(10);
+        }
+        if(outputString != "")
+        {
+            alert(outputString);
+        }
+        
+    }   
+    function onUpdate()
+    {
+        let tempCode = trimCode(document.querySelector(".codeDisplay").value);
+        console.log(code);
+        console.log(tempCode.slice(0, -1));
+        if(code === tempCode.slice(0, -1))
+        {
+            console.log("called");
+            executeCode(tempCode.length - 1);
+        }
+        else
+        {
+            resetRegistry();
+            executeCode(0);
+        }
+    }
+    function resetRegistry()
+    {
+        console.log("called2");
+        index = 0;
+        lastIndex = 0;
+        registry = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        outputString = "";
+        placePointer(0);
+        updateRegistry();
+    }
+    function updateRegistry()
+    {
+        for(let i = 0; i < registry.length; i++)
+        {
+            registryNodes[i].innerText = registry[i];
+        }
+    }
+    function placePointer(lastIndex)
+    {
+        registryNodes[index].appendChild(pointer);
+    }
+    //moves index left by one, with wrapping
+    function shiftLeft()
+    {
+        lastIndex = index;
+        index--;
+        if(index < 0)
+            index = 0;
+    }
+    //moves index right, with wrapping
+    function shiftRight()
+    {
+        lastIndex = index;
+        index++;
+        if(index > 19)
+            index = 0;
+    }
+    //increments index, with wrapping for int max
+    function increment()
+    {
+        registry[index]++;
+        if(registry[index] > 255)
+            registry[index] = 0;
+    }
+    //decrements index, with wrapping for int min
+    function decrement()
+    {
+        registry[index]--;
+        if(registry[index] < 0)
+            registry[index] = 255;
+    }
+    //allows input from user with alertBox
+    function input()
+    {
+        let input = prompt("Please input a character");
+        registry[index] = input.charCodeAt(0);
+        console.log(registry[index]);
+    }
+    //TODO make output work
+    function output()
+    {
+        outputString += String.fromCharCode(registry[index]);
+    }
+    //takes user out of loop if the current index=0, with checking for invalid loops 
+    function openLoop(i)
+    {
+        let numOpenBrackets = 0;
+        if(registry[index] == 0)
+        {
+            for(let j = i + 1; j < code.length; j++)
+            {
+                if(code[j] == '[')
+                {
+                    numOpenBrackets++;
+                }
+                if(code[j] == ']')
+                {
+                    if(numOpenBrackets == 0)
+                        return j;
+                    else
+                        numOpenBrackets--;
+                }
+            }
+        }
+        return i;
+    }
+    //puts user back at the start of the loop, with checking for invalid loops
+    function closeLoop(i)
+    {
+        let numClosedBrackets = 0;
+        for(let j = i - 1; j > 0; j--)
+        {
+            if(code[j] == ']')
+            {
+                numClosedBrackets++;
+            }
+            if(code[j] == '[')
+            {
+                if(numClosedBrackets == 0)
+                    return j-1;
+                else
+                    numClosedBrackets--;
+            }
+        }
+        return i;
+    }
+    //sleep function, function MUST be async in order to use this
+    function sleep(ms) 
+    {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+    function downloadCode(){
+        const link = document.createElement("a");
+        const content = document.querySelector(".codeDisplay").value;
+        const file = new Blob([content], { type: 'text/plain' });
+        link.href = URL.createObjectURL(file);
+        link.download = "code.txt";
+        link.click();
+        URL.revokeObjectURL(link.href);
+    }
+
+
+    
+</script>
