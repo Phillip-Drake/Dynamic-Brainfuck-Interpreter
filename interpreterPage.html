@@ -7,6 +7,7 @@
         <title>Phillip Drake</title>
     </head>
     <body>
+        <!--Registry!-->
         <div class = "regDisplayParent preventSelect">
             <var class = "regDisplayChild"></var>
             <var class = "regDisplayChild"></var>
@@ -29,6 +30,7 @@
             <var class = "regDisplayChild"></var>
             <var class = "regDisplayChild"></var>
         </div>
+        <!--Dynamic Switch-->
         <label class = "center text">
             Dynamic Mode
         </label>
@@ -36,12 +38,14 @@
             <input type = "checkbox" id = "dynamic">
             <span class = "slider"></span>
         </label>
+        <!--Delay Slider-->
         <label class = "center text">
             Delay
         </label>
         <div class="slideContainer">
             <input type="range" min="0" max="100" value="50" class = "delaySlider" id="delayMs">
         </div>
+        <!--Code Display and Play Button-->
         <div class = "codeDisplayWrapper">
             <div class = "button preventSelect" onclick = "executeCode(0)">
                 <div class = "playIcon"></div>
@@ -115,6 +119,7 @@ Sample Hello World :
         }
         return code;
     }
+    //returns promise after x milliseconds
     function resolveAfterX(x) {
         return new Promise((resolve) => {
             setTimeout(() => {
@@ -179,13 +184,14 @@ Sample Hello World :
             placePointer();
             await resolveAfterX(document.querySelector("#delayMs").value);
         }
+        //Displays output
         if(outputString != "")
         {
             alert(outputString);
         }
         executing = false;
     }
-
+    //executes on change in codeDisplay
     async function onUpdate()
     {
         //leaves the function if dynamic mode is off
@@ -219,28 +225,26 @@ Sample Hello World :
         //adds one to the queue, waits until the code is done executing, and then execute from the first queued character
         queuedActions++;
         //this function WILL last forever if there is an infinite loop, 
-        while(executing || queuedActions == 0)
+        while(executing)
         {
             await resolveAfterX(document.querySelector("#delayMs").value);
         }
         //this executeCode function only needs to come from the last character because of the asynchronous nature, 
         //so the last character is actually the character at the start of the queue
-        if(queuedActions != 0)
-        {
-            exeuteCode(tempCode.length - 1);
-        }
         executeCode(tempCode.length - 1);
         queuedActions = 0;
     }
+    //resets registry values
     function resetRegistry()
     {
         index = 0;
         lastIndex = 0;
         registry = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
         outputString = "";
-        placePointer(0);
+        placePointer();
         updateRegistry();
     }
+    //changes the text of each registry child to the corresponding registry value
     function updateRegistry()
     {
         for(let i = 0; i < registry.length; i++)
@@ -248,7 +252,8 @@ Sample Hello World :
             registryNodes[i].innerText = registry[i];
         }
     }
-    function placePointer(lastIndex)
+    //places pointer html object under registry child at index
+    function placePointer()
     {
         registryNodes[index].appendChild(pointer);
     }
